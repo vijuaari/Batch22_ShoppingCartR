@@ -1,5 +1,33 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model List<Category>
+<figure>
+    <blockquote class="blockquote">
+        <p class="mb-0">This is Category page.This page would be used by Admin to add any new Category for books.</p>
+
+    </blockquote>
+    <figcaption class="blockquote-footer">
+        This is Admin, <cite title="Source Title">AdminRole required</cite>
+    </figcaption>
+</figure>
+
+<button type="button" class="btn btn-danger">Create Category</button>
+<div> </div>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th scope="col">CategoryId</th>
+            <th scope="col">CategoryName</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var i in Model)
+        {
+            <tr class="table-success">
+               
+                <td>@i.CategoryId</td>
+                <td>@i.Name</td>
+                
+            </tr>
+        }
+
+    </tbody>
+</table>
