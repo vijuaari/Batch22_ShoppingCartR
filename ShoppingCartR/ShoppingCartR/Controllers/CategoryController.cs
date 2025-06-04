@@ -36,12 +36,24 @@ namespace ShoppingCartR.Controllers
         // POST: CategoryController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create(Category Category)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
-            }
+                if (Category == null)
+                {
+                    return RedirectToAction(nameof(Index));
+                 }
+                if (ModelState.IsValid)
+                {
+                    _unitOfWork.Category.Add(Category);
+                    _unitOfWork.Save();
+                    TempData["Success"] = "Category created Successfully";
+                    return RedirectToAction("Index");
+                }
+                return View();
+
+                }
             catch
             {
                 return View();
@@ -51,17 +63,35 @@ namespace ShoppingCartR.Controllers
         // GET: CategoryController/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            if (id == 0)
+            {
+                return NotFound();
+            }
+            var checkCategory =_unitOfWork.Category.Get(x=> x.CategoryId == id);
+            if (checkCategory == null)
+            { 
+                return NotFound(); 
+            }       
+            return View(checkCategory);
         }
 
         // POST: CategoryController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(Category Category)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                
+                if (ModelState.IsValid)
+                {
+                    _unitOfWork.Category.Update(Category);
+                    _unitOfWork.Save();
+                    TempData["Success"] = "Category updated Successfully";
+                    return RedirectToAction("Index");
+                }
+                return View();
+
             }
             catch
             {
@@ -72,17 +102,34 @@ namespace ShoppingCartR.Controllers
         // GET: CategoryController/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+            if (id == 0)
+            {
+                return NotFound();
+            }
+            var checkCategory = _unitOfWork.Category.Get(x => x.CategoryId == id);
+            if (checkCategory == null)
+            {
+                return NotFound();
+            }
+            return View(checkCategory);
         }
 
         // POST: CategoryController/Delete/5
-        [HttpPost]
+        [HttpPost , ActionName ("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public ActionResult Deletepost(int id)
         {
             try
             {
-                return RedirectToAction(nameof(Index));
+                var checkCategory = _unitOfWork.Category.Get(x => x.CategoryId == id);
+                if (checkCategory == null)
+                {
+                    return NotFound();
+                }
+                _unitOfWork.Category.Remove(checkCategory);
+                _unitOfWork.Save();
+                TempData["Success"] = "Category deleted Successfully";
+                return RedirectToAction("Index");
             }
             catch
             {
