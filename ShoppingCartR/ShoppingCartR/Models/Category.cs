@@ -5,6 +5,7 @@ namespace ShoppingCartR.Models
 {
     public class Category
     {
+        [Key]
         public int CategoryId { get; set; }
         [MaxLength(30)]
         [Required]
