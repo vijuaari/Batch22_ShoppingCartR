@@ -17,5 +17,7 @@ namespace ShoppingCartR.Models
         public Category Category { get; set; }
         public decimal Price { get; set; }
         public string ISBN { get; set; }
+        [ValidateNever]
+        public List<ProductImage> ProductImages { get; set;}
     }
 }

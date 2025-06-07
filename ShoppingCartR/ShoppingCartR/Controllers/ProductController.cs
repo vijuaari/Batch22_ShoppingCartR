@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ShoppingCartR.Models;
@@ -10,17 +11,19 @@ namespace ShoppingCartR.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProductController(IUnitOfWork unitOfWork)
+        public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
 
         }
         // GET: ProductController
         public ActionResult Index()
         {
             List<Product> ProductList = _unitOfWork.Product.GetAllexpression().ToList();
-                return View(ProductList);
+            return View(ProductList);
         }
 
         // GET: ProductController/Details/5
@@ -41,7 +44,7 @@ namespace ShoppingCartR.Controllers
                     Value = u.CategoryId.ToString()
 
                 }),
-                    Product = new Product()
+                Product = new Product()
             };
             return View(ProductVM);
         }
@@ -56,7 +59,7 @@ namespace ShoppingCartR.Controllers
                 if (Product == null)
                 {
                     return RedirectToAction(nameof(Index));
-                 }
+                }
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Product.Add(Product);
@@ -66,7 +69,7 @@ namespace ShoppingCartR.Controllers
                 }
                 return View();
 
-                }
+            }
             catch
             {
                 return View();
@@ -80,11 +83,11 @@ namespace ShoppingCartR.Controllers
             {
                 return NotFound();
             }
-            var checkProduct =_unitOfWork.Product.Get(x=> x.ProductId == id);
+            var checkProduct = _unitOfWork.Product.Get(x => x.ProductId == id);
             if (checkProduct == null)
-            { 
-                return NotFound(); 
-            }       
+            {
+                return NotFound();
+            }
             return View(checkProduct);
         }
 
@@ -95,7 +98,7 @@ namespace ShoppingCartR.Controllers
         {
             try
             {
-                
+
                 if (ModelState.IsValid)
                 {
                     _unitOfWork.Product.Update(Product);
@@ -128,7 +131,7 @@ namespace ShoppingCartR.Controllers
         }
 
         // POST: ProductController/Delete/5
-        [HttpPost , ActionName ("Delete")]
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult Deletepost(int id)
         {
@@ -149,5 +152,81 @@ namespace ShoppingCartR.Controllers
                 return View();
             }
         }
+
+        [HttpGet]
+        public IActionResult Upsert(int? id)
+        {
+            ProductVM productVM = new()
+            {
+                CategoryList = _unitOfWork.Category.GetAllexpression().Select(u => new SelectListItem
+                {
+                    Text = u.Name,
+                    Value = u.CategoryId.ToString()
+
+                }),
+                Product = new Product()
+            };
+            if (id == null || id == 0)
+            {
+                //create
+                return View(productVM);
+            }
+            else
+            {
+                //update
+                productVM.Product = _unitOfWork.Product.Get(u => u.ProductId == id);
+                return View(productVM);
+            }
+        }
+            [HttpPost]
+
+         public IActionResult Upsert (ProductVM productVM, List<IFormFile> files)
+         {
+                if (ModelState.IsValid)
+                {
+                    if (productVM.Product.ProductId == 0)
+                    {
+                        _unitOfWork.Product.Add(productVM.Product);
+                    }
+                    else
+                    {
+                        _unitOfWork.Product.Update(productVM.Product);
+                    }
+                    _unitOfWork.Save();
+                    string wwwRootPath = _webHostEnvironment.WebRootPath;
+                    if (files != null)
+                    {
+                        foreach (IFormFile file in files)
+                        {
+                            string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                            string productPath = @"ProductImages" + productVM.Product.ProductId;
+                            string finalPath = Path.Combine(wwwRootPath, fileName);
+
+                            if (!Directory.Exists(finalPath))
+                            {
+                                Directory.CreateDirectory(finalPath);
+                            }
+                            using (var filestream = new FileStream(Path.Combine(finalPath, fileName), FileMode.Create))
+                            {
+                                file.CopyTo(filestream);
+                            }
+                            ProductImage productImage = new ProductImage()
+                            {
+                               ImageUrl = @"\" + productPath + @"\" + fileName,
+                                ProductId = productVM.Product.ProductId,
+                            };
+                            if ( productVM.Product.ProductImages == null)
+                            {
+                                productVM.Product.ProductImages = new List<ProductImage>();                            
+                            }
+                            productVM.Product.ProductImages.Add(productImage);
+                        }
+                        _unitOfWork.Product.Update(productVM.Product);
+                        _unitOfWork.Save();
+                    }
+                }        
+                     TempData["Sucess"] = "Product created/updated sucessfully";
+                     return RedirectToAction("Index");            
+         }
     }
 }
