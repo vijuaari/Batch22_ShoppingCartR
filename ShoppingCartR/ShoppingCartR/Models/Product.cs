@@ -18,6 +18,6 @@ namespace ShoppingCartR.Models
         public decimal Price { get; set; }
         public string ISBN { get; set; }
         [ValidateNever]
-        public List<ProductImage> ProductImages { get; set;}
+        public List<ProductImage> ProductImage { get; set;}
     }
 }
