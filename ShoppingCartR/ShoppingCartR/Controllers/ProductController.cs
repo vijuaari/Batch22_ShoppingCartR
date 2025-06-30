@@ -22,8 +22,22 @@ namespace ShoppingCartR.Controllers
         // GET: ProductController
         public ActionResult Index()
         {
+            JQueryDataTableParam param = new JQueryDataTableParam();
+            param.Search = "a";
+            param.DisplayStart = 1;
+            param.DisplayLength = 2;
+
             List<Product> ProductList = _unitOfWork.Product.GetAllexpression().ToList();
+            if (!String.IsNullOrEmpty(param.Search))
+            {
+                ProductList = ProductList.Where(x => x.ISBN.ToLower().Contains(param.Search.ToLower())
+                || x.Author.ToLower().Contains(param.Search.ToLower())
+                || x.Title.ToLower().Contains(param.Search.ToLower())
+                || x.Description.ToLower().Contains(param.Search.ToLower())).ToList();
+
+            }
             return View(ProductList);
+            
         }
 
         // GET: ProductController/Details/5
